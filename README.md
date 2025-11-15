@@ -27,7 +27,7 @@ The setup script will:
 1. **Create virtual environment:**
    ```bash
    python3 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   source venv/bin/activate
    ```
 
 2. **Install dependencies:**
@@ -66,6 +66,22 @@ OLLAMA_MODEL=llama3.1:8b
 - 🛂 **Visa Information** - Check visa requirements and entry restrictions for your travel destination
 
 ## Prompting Techniques
+
+### Key Prompt Engineering Decisions
+
+**1. Value-First Response Strategy**: The system prioritizes providing immediate value over asking clarifying questions. For destination recommendations, if sufficient information exists (budget + origin + preferences), the model provides 3 recommendations immediately rather than asking follow-up questions.
+
+**2. Rule-Based Decision Logic**: Explicit IF/ELSE decision trees in prompts (e.g., `destination_intent_guidance.j2`) ensure consistent behavior. For example: "IF budget mentioned without origin → ask for origin only; ELSE IF 3+ criteria present → provide recommendations immediately."
+
+**3. Strict JSON-Only Output for Extraction**: All extraction prompts use multiple reinforcement techniques ("CRITICAL", "MUST", "ONLY") to enforce JSON-only responses, preventing parsing failures from natural language explanations.
+
+**4. Specialized Role Separation**: Different prompts for different tasks (intent classification, location extraction, date extraction, research) rather than a single monolithic prompt, improving accuracy and reliability.
+
+**5. Context-Aware Prompt Selection**: Prompts are dynamically selected and injected based on extracted intent, ensuring the model receives task-specific guidance at the right moment in the conversation flow.
+
+**6. Explicit Tool Selection Rules**: Research agent prompts include detailed rules with examples for when to use each tool, reducing hallucination and ensuring reliable function calling.
+
+---
 
 This project employs several advanced prompting techniques to improve LLM performance and reliability:
 

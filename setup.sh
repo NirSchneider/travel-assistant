@@ -93,19 +93,120 @@ else
     exit 1
 fi
 
-# Check if Ollama is running (optional check)
-print_status "Checking Ollama service..."
-if command -v ollama &> /dev/null; then
-    if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
-        print_success "Ollama service is running"
+# Check and install Ollama if needed
+print_status "Checking Ollama installation..."
+# Models used in the application
+REQUIRED_MODELS=("qwen3" "llama3.1:8b")
+
+if ! command -v ollama &> /dev/null; then
+    print_warning "Ollama not found. Installing Ollama..."
+    print_status "Downloading and installing Ollama (this may take a moment)..."
+    
+    # Check OS type for installation method
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS - try Homebrew first, then official installer
+        if command -v brew &> /dev/null; then
+            print_status "Installing Ollama via Homebrew..."
+            if brew install ollama; then
+                print_success "Ollama installed via Homebrew"
+            else
+                print_warning "Homebrew installation failed, trying official installer..."
+                if curl -fsSL https://ollama.com/install.sh | sh; then
+                    print_success "Ollama installed successfully"
+                else
+                    print_error "Failed to install Ollama automatically"
+                    print_error "Please install Ollama manually from: https://ollama.ai"
+                    exit 1
+                fi
+            fi
+        else
+            # macOS without Homebrew - use official installer
+            if curl -fsSL https://ollama.com/install.sh | sh; then
+                print_success "Ollama installed successfully"
+            else
+                print_error "Failed to install Ollama automatically"
+                print_error "Please install Ollama manually from: https://ollama.ai"
+                exit 1
+            fi
+        fi
+        # Add common macOS paths
+        export PATH="$PATH:/usr/local/bin:/opt/homebrew/bin"
     else
-        print_warning "Ollama is installed but service might not be running"
-        print_warning "Make sure Ollama is running: ollama serve"
+        # Linux - use official installer
+        if curl -fsSL https://ollama.com/install.sh | sh; then
+            print_success "Ollama installed successfully"
+            # Add to PATH for Linux
+            export PATH="$PATH:$HOME/.local/bin"
+        else
+            print_error "Failed to install Ollama automatically"
+            print_error "Please install Ollama manually from: https://ollama.ai"
+            exit 1
+        fi
+    fi
+    
+    # Verify installation
+    if ! command -v ollama &> /dev/null; then
+        print_error "Ollama was installed but not found in PATH"
+        print_error "Please restart your terminal or add Ollama to your PATH"
+        print_error "Or run: export PATH=\"\$PATH:\$HOME/.local/bin\""
+        exit 1
     fi
 else
-    print_warning "Ollama not found. The app requires Ollama to be installed and running."
-    print_warning "Install from: https://ollama.ai"
+    print_success "Ollama is already installed"
 fi
+
+# Check if Ollama service is running, start if not
+print_status "Checking Ollama service..."
+if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
+    print_success "Ollama service is running"
+else
+    print_status "Starting Ollama service in the background..."
+    # Start Ollama in background
+    nohup ollama serve > /dev/null 2>&1 &
+    OLLAMA_PID=$!
+    
+    # Wait a bit for Ollama to start
+    sleep 3
+    
+    # Check if it started successfully
+    if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
+        print_success "Ollama service started (PID: $OLLAMA_PID)"
+    else
+        print_warning "Ollama service might not have started. Trying to start manually..."
+        # Try to start in background again
+        ollama serve > /dev/null 2>&1 &
+        sleep 2
+        if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
+            print_success "Ollama service is now running"
+        else
+            print_error "Could not start Ollama service. Please run 'ollama serve' manually in another terminal."
+            exit 1
+        fi
+    fi
+fi
+
+# Check and pull required models
+print_status "Checking for required models..."
+# Wait a moment for Ollama to be ready
+sleep 1
+
+for model in "${REQUIRED_MODELS[@]}"; do
+    print_status "Checking model: ${model}..."
+    # Check if model exists (handle both exact match and version variations)
+    if ollama list 2>/dev/null | grep -q "${model}"; then
+        print_success "Model ${model} is available"
+    else
+        print_status "Model ${model} not found. Pulling model (this may take several minutes)..."
+        print_warning "This is a one-time download. Models are large (~GB), so please be patient..."
+        if ollama pull ${model}; then
+            print_success "Model ${model} pulled successfully"
+        else
+            print_error "Failed to pull model ${model}"
+            print_error "Please run 'ollama pull ${model}' manually"
+            print_warning "Continuing anyway - the app will show an error if the model is missing"
+        fi
+    fi
+done
 
 # Function to open browser
 open_browser() {
