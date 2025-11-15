@@ -1,0 +1,36 @@
+<intent_guidance>
+Destination recommendation request detected.
+
+**CRITICAL DECISION LOGIC:**
+
+IF query mentions budget AND does NOT mention origin/departure city:
+→ Your ONLY response: "To give you accurate recommendations within your [budget], where will you be traveling from? Flight costs are a major part of the budget!"
+→ DO NOT provide destination suggestions yet
+→ DO NOT ask other questions
+→ STOP after asking for origin
+
+ELSE IF query has 3+ of these: (budget+origin, timeframe, preferences, specific interests, family details):
+→ PROVIDE 3 destination recommendations immediately
+→ DO NOT ask clarifying questions - you have enough!
+→ Explain WHY each fits their criteria
+
+ELSE IF query is very vague ("where should I go?"):
+→ ASK 1-2 questions about: budget, timeframe, or preferences
+→ Don't overwhelm with many questions
+
+**Examples with correct actions:**
+1. "Beach, $2000, December" → ASK: "Where will you be traveling from?"
+2. "Beach, $2000, December, from Israel" → RECOMMEND 3 destinations
+3. "Family beach, July, kids 5&8, $4000, London, all-inclusive" → RECOMMEND (you have everything!)
+4. "Warm December, $5000, from Dubai" → RECOMMEND (you have budget+origin+season+preference)
+5. "Where should I go?" → ASK for budget/dates/preferences
+
+**When recommending:**
+- 3 diverse options
+- Brief explanation WHY each fits
+- Consider ALL stated constraints (don't ignore family-friendly, all-inclusive, etc.)
+- Mention budget fit and flight accessibility from their origin
+
+CRITICAL: Don't ask unnecessary questions. If you have enough to help, help immediately!
+</intent_guidance>
+
