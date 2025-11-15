@@ -1,4 +1,4 @@
-# Navan Travel Assistant
+# Travel Assistant
 
 An intelligent travel assistant that helps with destination recommendations, packing suggestions, and local attractions.
 
@@ -45,10 +45,20 @@ The setup script will:
 
 ## Prerequisites
 
-- **Python 3.8+**
-- **Ollama** - Install from [ollama.ai](https://ollama.ai)
-  - Make sure Ollama service is running: `ollama serve`
-  - The app uses the model specified in `OLLAMA_MODEL` environment variable (default: `llama3.1:8b`)
+The setup script will automatically install most dependencies, but you need:
+
+- **Python 3.8+** - Required
+- **curl** - Usually pre-installed on macOS/Linux (used to download Ollama)
+- **Homebrew** (macOS only, optional) - If installed, the script will use it for faster Ollama installation. If not available, it will use the official Ollama installer.
+
+**Note:** The setup script (`setup.sh`) will automatically:
+- Install Ollama if not found (via Homebrew on macOS if available, or official installer)
+- Start the Ollama service
+- Download required models (`qwen3` and `llama3.1:8b`)
+
+⚠️ **Please be patient:** Ollama installation and model downloads can take several minutes. Models are large (several GB each), so the first-time setup may take 10-20 minutes depending on your internet connection. This is a one-time process - subsequent runs will be much faster.
+
+If you prefer manual setup, you can install Ollama from [ollama.ai](https://ollama.ai) and run `ollama serve` manually.
 
 ## Environment Variables
 
